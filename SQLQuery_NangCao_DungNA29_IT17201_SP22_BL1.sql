@@ -404,3 +404,22 @@ WHEN N'Nữ' THEN 'Ms.' + TenNV
 ELSE N'Không xác định ' + TenNV
 END
 FROM nhanvien
+
+-- Viết lại theo cách khác
+SELECT TenNV =
+CASE 
+WHEN GioiTinh = 'Nam' THEN 'Mr.' + TenNV
+WHEN GioiTinh LIKE N'Nữ' THEN 'Ms.' + TenNV
+ELSE N'Không xác định ' + TenNV
+END
+FROM nhanvien
+
+-- Tạo ra 1 cột tính thuế cho lương nhân viên
+SELECT MaNhanVien,TenNV,LuongNV,
+Thue = CASE
+WHEN LuongNV BETWEEN 0 AND 300000 THEN LuongNV*0.5
+WHEN LuongNV BETWEEN 300000 AND 600000 THEN LuongNV*0.9
+WHEN LuongNV BETWEEN 600000 AND 10000000 THEN LuongNV*0.1
+ELSE LuongNV*0.25
+END
+FROM nhanvien
