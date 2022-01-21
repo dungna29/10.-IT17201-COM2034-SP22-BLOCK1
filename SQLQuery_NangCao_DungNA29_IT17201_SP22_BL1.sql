@@ -379,8 +379,8 @@ IIF(condition, value_if_true, value_if_false)
 */
 SELECT IIF(500<1000,'Đúng rồi','Sai rồi')--Giống toán tử 3 ngôi
 
-SELECT MaNhanVien, TenDemNV, 
-IIF(IdCuaHang = 1,N'Thuộc cửa hàng 1',N'Không thuộc cửa hàng 1')
+SELECT MaNhanVien, TenDemNV,
+    IIF(IdCuaHang = 1,N'Thuộc cửa hàng 1',N'Không thuộc cửa hàng 1')
 FROM nhanvien
 
 /*
@@ -415,11 +415,136 @@ END
 FROM nhanvien
 
 -- Tạo ra 1 cột tính thuế cho lương nhân viên
-SELECT MaNhanVien,TenNV,LuongNV,
-Thue = CASE
-WHEN LuongNV BETWEEN 0 AND 300000 THEN LuongNV*0.5
-WHEN LuongNV BETWEEN 300000 AND 600000 THEN LuongNV*0.9
+SELECT MaNhanVien, TenNV, LuongNV,
+    Thue = (CASE
+WHEN LuongNV BETWEEN 0 AND 300000 THEN LuongNV*0.05
+WHEN LuongNV BETWEEN 300000 AND 600000 THEN LuongNV*0.08
 WHEN LuongNV BETWEEN 600000 AND 10000000 THEN LuongNV*0.1
-ELSE LuongNV*0.25
-END
+ELSE LuongNV*0.3
+END)
 FROM nhanvien
+
+/*Vòng lặp WHILE (WHILE LOOP) được sử dụng nếu bạn muốn 
+chạy lặp đi lặp lại một đoạn mã khi điều kiện cho trước trả về giá trị là TRUE.*/
+DECLARE @DEM INT = 1
+WHILE @DEM < 5
+BEGIN
+    PRINT N'MÔN CSDL NÂNG CAO QUAN TRỌNG PHẢI CHỊU KHÓ CODE'
+    SET @DEM += 1
+    PRINT @DEM
+END
+PRINT N'THỰC RA CŨNG KHÔNG KHÓ NHỈ'
+
+-- Ví dụ: Cộng zồn tổng từ 1 đến 5 = ?
+DECLARE @NUMBER INT = 0,@I INT = 1
+WHILE @I < 6
+BEGIN
+    SET @NUMBER += @I
+    SET @I =@I + 1
+END
+PRINT @NUMBER
+
+/*Lệnh Break (Ngắt vòng lặp)*/
+/* Lệnh Continue: Thực hiện bước lặp tiếp theo bỏ qua các lệnh trong 
+bước lặp hiện tại*/
+DECLARE @DEM1 INT = 0
+WHILE @DEM1 < 10
+BEGIN
+    IF @DEM1 = 5
+    BEGIN
+        PRINT @DEM1
+        SET @DEM1 = @DEM1 + 1
+        CONTINUE
+    END
+ELSE
+    BEGIN
+        PRINT N'MÔN CSDL NÂNG CAO QUAN TRỌNG PHẢI CHỊU KHÓ CODE'
+        PRINT @DEM1
+    -- SET @DEM1 = @DEM1 + 1
+    END
+    SET @DEM1 = @DEM1 + 1
+END
+PRINT N'THỰC RA CŨNG KHÔNG KHÓ NHỈ'
+
+/* 3.2 Try...Catch 
+SQLServer Transact-SQL cung cấp cơ chế kiểm soát lỗi bằng TRY … CATCH
+như trong các ngôn ngữ lập trình phổ dụng hiện nay (Java, C, PHP, C#).
+Một số hàm ERROR thường dùng
+_
+ERROR_NUMBER() : Trả về mã số của lỗi dưới dạng số
+ERROR_MESSAGE() Trả lại thông báo lỗi dưới hình thức văn bản 
+ERROR_SEVERITY() Trả lại mức độ nghiêm trọng của lỗi kiểu int
+ERROR_STATE() Trả lại trạng thái của lỗi dưới dạng số
+ERROR_LINE() : Trả lại vị trí dòng lệnh đã phát sinh ra lỗi
+ERROR_PROCEDURE() Trả về tên thủ tục/Trigger gây ra lỗi
+*/
+
+BEGIN TRY
+    SELECT 1 + 'STRING'
+END TRY
+BEGIN CATCH
+    SELECT
+    ERROR_NUMBER() AS N'TRẢ VỀ LỖI DƯỚI DẠNG SỐ',
+    ERROR_MESSAGE() AS N'TRẢ VỀ LỖI DƯỚI VĂN BẢN'
+END CATCH
+
+-- Thử Insert dữ liệu vào 1 bảng
+BEGIN TRY
+    INSERT INTO chucvu
+    (IdChucVu,MaChucVu,TenChucVu)
+VALUES(1, 'AA', N'Hoàng')   
+END TRY
+BEGIN CATCH
+   PRINT N'Bạn ơi không insert được rồi'
+   PRINT N'Thông báo: ' + ERROR_MESSAGE()
+   PRINT N'Thống báo: ' + CONVERT(VARCHAR,ERROR_NUMBER(),1)
+END CATCH
+
+/* 3.3 RAISERROR
+*/
+-- Có dùng RAISE....
+BEGIN TRY
+    INSERT INTO chucvu
+    (IdChucVu,MaChucVu,TenChucVu)
+VALUES(1, 'AA', N'Hoàng')   
+END TRY
+BEGIN CATCH
+   DECLARE @ErMESSAGE VARCHAR(MAX), @ErSEVERITY INT, @ErSTATE INT
+   SELECT
+    @ErMESSAGE = ERROR_MESSAGE(),
+    @ErSEVERITY = ERROR_SEVERITY(),
+    @ErSTATE = ERROR_STATE()
+    RAISERROR(@ErMESSAGE,@ErSEVERITY, @ErSTATE)
+END CATCH
+-- KHÔNG DÙNg 
+BEGIN TRY
+    INSERT INTO chucvu
+    (IdChucVu,MaChucVu,TenChucVu)
+VALUES(1, 'AA', N'Hoàng')   
+END TRY
+BEGIN CATCH
+   DECLARE @ErMESSAGE1 VARCHAR(MAX), @ErSEVERITY1 INT, @ErSTATE1 INT
+   SELECT
+    @ErMESSAGE1 = ERROR_MESSAGE(),
+    @ErSEVERITY1 = ERROR_SEVERITY(),
+    @ErSTATE1 = ERROR_STATE()
+   PRINT N'Thông báo: ' + @ErMESSAGE1 + ' | ' + CONVERT(VARCHAR,@ErSEVERITY1,1) +
+   ' | ' + CONVERT(VARCHAR, @ErSTATE1,1)   
+END CATCH
+
+/* 3.4 ý nghĩa của Replicate  */
+DECLARE @Ten123 NVARCHAR(50)
+SET @Ten123 = REPLICATE(N'CHƯƠNG',9)--Lặp lại số lần với String chuyền vào
+PRINT @Ten123
+
+-- Bài tập SP
+-- CREATE PROC sp_TimMaNhanVien1
+-- AS
+-- BEGIN
+--     DECLARE  @MaNV NVARCHAR(100) = 'NV01', @IDTang INT = 1
+--     WHILE EXISTS (SELECT dbo.nhanvien.MaNhanVien FROM nhanvien WHERE MaNhanVien = @MaNV)
+--     BEGIN
+-- 		SET @IDTang = @IDTang +1
+-- 		SET @MaNV = 'NV' + REPLICATE('0',2 - LEN(CAST(@IDTang AS nvarchar))) + CAST(@IDTang AS nvarchar)
+-- 	END
+-- END 
