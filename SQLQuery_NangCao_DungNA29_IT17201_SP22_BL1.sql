@@ -537,14 +537,215 @@ DECLARE @Ten123 NVARCHAR(50)
 SET @Ten123 = REPLICATE(N'CHƯƠNG',9)--Lặp lại số lần với String chuyền vào
 PRINT @Ten123
 
--- Bài tập SP
--- CREATE PROC sp_TimMaNhanVien1
--- AS
--- BEGIN
---     DECLARE  @MaNV NVARCHAR(100) = 'NV01', @IDTang INT = 1
---     WHILE EXISTS (SELECT dbo.nhanvien.MaNhanVien FROM nhanvien WHERE MaNhanVien = @MaNV)
---     BEGIN
--- 		SET @IDTang = @IDTang +1
--- 		SET @MaNV = 'NV' + REPLICATE('0',2 - LEN(CAST(@IDTang AS nvarchar))) + CAST(@IDTang AS nvarchar)
--- 	END
--- END 
+/* TỔNG KẾT STORE PROCEDURE :
+ -- Là lưu trữ một tập hợp các câu lệnh đi kèm trong CSDL cho phép tái sử dụng khi cần
+ -- Hỗ trợ các ứng dụng tương tác nhanh và chính xác
+ -- Cho phép thực thi nhanh hơn cách viết từng câu lệnh SQL
+ -- Stored procedure có thể làm giảm bớt vấn đề kẹt đường truyền mạng, dữ liệu được gởi theo gói.
+ -- Stored procedure có thể sử dụng trong vấn đề bảo mật, phân quyền
+ -- Có 2 loại Store Procedure chính: System stored	procedures và User stored procedures   
+ 
+ -- Cấu trúc của Store Procedure bao hồm:
+	➢Inputs: nhận các tham số đầu vào khi cần
+	➢Execution: kết hợp giữa các yêu cầu nghiệp vụ với các lệnh
+	lập trình như IF..ELSE, WHILE...
+	➢Outputs: trả ra các đơn giá trị (số, chuỗi…) hoặc một tập kết quả.
+ 
+ --Cú pháp:
+ CREATE hoặc ALTER(Để cập nhật nếu đã tồn tại tên SP) PROC <Tên STORE PROCEDURE> <Tham số truyền vào nếu có>
+ AS
+ BEGIN
+  <BODY CODE>
+
+ END
+
+ ĐỂ GỌI SP dùng EXEC hoặc EXECUTE
+
+SPs chia làm 2 loại:
+
+System stored procedures: Thủ tục mà những người sử dụng chỉ có quyền thực hiện, không được phép thay đổi.	
+User stored procedures: Thủ tục do người sử dụng tạo và thực hiện.
+
+ -- SYSTEM STORED PROCEDURES
+ Là những stored procedure chứa trong Master Database, thường bắt đầu bằng tiếp đầu ngữ	 sp_
+ Chủ yếu dùng trong việc quản lý cơ sở dữ liệu(administration) và bảo mật (security).
+❑Ví dụ: sp_helptext <tên của đối tượng> : để lấy định nghĩa của đối tượng (thông số tên đối
+tượng truyền vào) trong Database
+ */
+
+--  Ví dụ đơn giản về Store: 
+-- Lần đầu tạo thì phải sử dụng câu lệnh CREATE còn nếu muốn sửa thì dùng ALTER
+GO
+ALTER PROCEDURE SP_PRO2
+AS
+SELECT *
+FROM nhanvien
+
+-- PROC Cách viết ngắn gọn hơn
+GO
+CREATE PROC SP_PRO3
+AS
+SELECT *
+FROM sanpham
+WHERE TenSP = N'Apple'
+GO
+-- EXEC thực thi cái nhóm câu lệnh đã được gán cho store
+-- EXECUTE Cách viết tường minh hơn
+EXECUTE SP_PRO1
+EXEC SP_PRO2
+
+/*
+ 3.5 Trigger trong SQL
+❑Trigger là một dạng đặc biệt của thủ tục lưu trữ  (store procedure), được thực thi một cách tự động khi có sự thay đổi dữ liệu (do tác động của
+câu lệnh INSERT, UPDATE, DELETE) trên một bảng nào đó.
+❑Không thể gọi thực hiện trực tiếp Trigger bằng lệnh EXECUTE.
+❑Trigger là một stored procedure không có tham số.
+❑Trigger được lưu trữ trong DB Server và thường hay được dùng để kiểm tra ràng buộc toàn vẹn dữ liệu
+
+-- Các Trigger DDL và DML có cách sử dụng khác nhau và được	thực thi với các sự kiện cơ sở dữ liệu khác nhau.
+   1. Trigger DDL
+		- Các Trigger DDL thực thi các thủ tục lưu trữ trên câu lệnh CREATE, ALTER va DROP
+		- Các Trigger DDL được sử dụng để kiểm tra và kiểm soát các hoạt động của cơ sở dữ liệu
+		- Các Trigger DDL chỉ hoạt động sau khi bảng hoặc khung nhìn được sửa đổi
+		- Các Trigger DDL được định nghĩa ở mức cơ sở liệu hoặc máy chủ
+   2. Trigger DML
+		- Các Trigger DML thực thi trên các câu lệnh INSERT, UPDATE và DELETE
+		- Các Trigger DML được sử dụng để thực thi các quy tắc NGHIỆP VỤ khi dữ liệu được sửa đổi trong bảng hoặc khung hình
+		- Các Trigger DML thực thi trong hoặc sau khi dữ liệu được sửa đổi.
+		- Các Triigger DML được định nghĩa ở mức cơ sở dữ liệu	 
+
+*/
+
+/* TRIGGER DML 
+❑Các trigger DML được thực thi khi sự kiện DML	xảy ra trong các bảng hoặc VIEW.
+❑Trigger DML này bao gồm các câu lệnh INSERT, UPDATE và DELETE.
+❑Các trigger DML gồm ba loại chính:Trigger	INSERT, Trigger UPDATE, Trigger DELETE
+Sinh ra Các bảng Inserted và Deleted
+❖Các trigger DML sử dụng hai loại bảng đặc biệt để sửa đổi dữ liệu trong cơ sở dữ liệu.
+❖Các bảng tạm thời lưu trữ dữ liệu ban đầu cũng như	 dữ liệu đã sửa đổi. Những bảng này gồm Inserted và	Deleted.
+❖Bảng Inserted:chứa bản sao các bản ghi được sửa đổi với hoạt động INSERT và UPDATE trên bảng trigger.
+Hoạt động INSERT và UPDATE sẽ tiến hành chèn các bản ghi mới vào bảng Inserted và bảng trigger.
+❖Bảng Deleted:chứa bản sao của các bản ghi được sửa đổi với hoạt động DELETE và UPDATE trên bảng trigger
+*/
+
+ /*
+ Trigger INSERT
+❖Trigger INSERT được thực thi khi một bản ghi mới được chèn vào bảng
+❖Trigger INSERT đảm bảo rằng giá trị đang được nhập	phù hợp với các ràng buộc được định nghĩa trên bảng đó.
+❖Bảng Inserted và Deleted về khía cạnh vật lý chúng không tồn tại trong cơ sở dữ liệu
+❖Trigger INSERT được tạo ra bằng cách sử dụng từ  khóa INSERT trong câu lệnh CREATE TRIGGER và ALTER TRIGGER.
+ 
+CREATE TRIGGER Tên_trigger ON Tên_Bảng
+FOR {DELETE, INSERT, UPDATE}
+AS
+BEGIN
+	Câu lệnh T-SQL
+END 
+
+❖tên_trigger: chỉ ra tên của trigger do người dùng tự đặt
+❖Tên bảng: chỉ ra bảng mà trên đó trigger DML được tạo ra
+(bảng trigger).
+❖FOR : hoạt động thao tác dữ liệu.
+❖Câu lệnh sql: chỉ ra các câu lệnh SQL được thực thi trong
+trigger DML
+
+ */
+
+-- Ví dụ về Trigger
+GO
+ALTER TRIGGER TG_InsertLuongNV ON nhanvien
+FOR INSERT 
+AS 
+BEGIN
+    IF(SELECT LuongNV
+    FROM inserted) < 50000
+    BEGIN
+PRINT N'Tiền lương tối thiểu khi insert vào phải lớn hơn 50k'
+    -- Hủy bỏ việc thay đổi khi thực hiện insert
+    ROLLBACK TRANSACTION
+    END
+END
+
+
+INSERT INTO nhanvien
+    (MaNhanVien,TenHoNV,TenDemNV,TenNV,GioiTinh,NgaySinh,DiaChi,
+    LuongNV,SoDienThoai,Email,IdCuaHang,IdChucVu,IdGuiBaoCao)
+VALUES('NV999', N'Nguyễn', N'Huy', N'Quyết', 'Nam', '1989-11-03', 'BG' , 1000000000,
+        '0582905832', 'quyetnhph10608@fpt.edu.vn', 1, 1, 1)
+
+
+GO
+ALTER TRIGGER TG_InsertDongSanPham ON dongsanpham
+FOR INSERT 
+AS 
+BEGIN
+    IF(SELECT TenDongSanPham
+    FROM inserted) = 'Macbook'
+PRINT N'Tên sản phẩm đã tồn tại'
+    -- Hủy bỏ việc thay đổi khi thực hiện insert
+    ROLLBACK TRANSACTION
+END
+
+INSERT INTO dongsanpham
+    (MaDongSanPham,TenDongSanPham,WebsiteDongSanPham)
+VALUES('DSP00123', 'Macbook1', 'Apple.com')
+
+/*
+ Trigger UPDATE
+❖Trigger UPDATE sao chép bản ghi gốc vào bảng  Deleted và bản ghi mới vào bảng Inserted
+❖Nếu các giá trị mới là hợp lệ thì bản ghi từ bảng Inserted sẽ được sao chép vào bảng dữ liệu
+❖Trigger UPDATE được tạo ra bằng cách sử dụng từ khóa UPDATE trong câu lệnh CREATE TRIGGER và ALTER TRIGGER.
+❖Cú pháp tương tự trigger insert
+ 
+CREATE TRIGGER Tên_trigger ON Tên_Bảng
+FOR {DELETE, INSERT, UPDATE}
+AS
+BEGIN
+	Câu lệnh TSQL
+END  
+ */
+ GO
+ALTER TRIGGER TG_UpdateLuongNV ON nhanvien
+ FOR UPDATE
+AS
+BEGIN
+    IF(SELECT LuongNV
+    FROM inserted) < 50000  
+    BEGIN
+        PRINT N'Tiền lương tối thiểu khi insert vào phải lớn hơn 50k';
+        -- Hủy bỏ việc thay đổi khi thực hiện insert
+        ROLLBACK TRANSACTION
+    END
+END
+GO
+UPDATE nhanvien SET LuongNV = 51000 WHERE MaNhanVien = 'NV01'
+/*
+ Trigger DELETE
+❖Ta có thể tạo ra trigger DELETE để hạn chế người dùng không xoá một bản ghi cụ thể trong bảng
+❖Khi người dùng cố gắng xóa bản ghi:
+	➢Bản ghi bị xóa khỏi bảng trigger và chèn vào bảng Deleted
+	➢Kiểm tra các ràng buộc liên quan khi xóa
+	➢Nếu có ràng buộc trên bản ghi để ngăn chặn việc xóa, trigger DELETE sẽ hiển thị thông báo lỗi
+	➢Bản ghi đã xóa được lưu trữ trong bảng Deleted được sao chép ngược lại bảng trigger.
+ 
+CREATE TRIGGER Tên_trigger ON Tên_Bảng
+FOR {DELETE, INSERT, UPDATE}
+AS
+BEGIN
+	Câu lệnh TSQL
+END  
+ */
+GO
+ALTER TRIGGER TG_DeleteMaNV01 ON nhanvien
+ FOR DELETE
+AS
+BEGIN
+    IF(SELECT MaNhanVien
+    FROM deleted) = 'NV999'
+    BEGIN
+        PRINT N'Nhân viên này là nhân viên cấp cao không thể xóa được';
+        -- Hủy bỏ việc thay đổi khi thực hiện insert
+        ROLLBACK TRANSACTION
+    END
+END
+DELETE FROM nhanvien WHERE MaNhanVien = 'NV999'
