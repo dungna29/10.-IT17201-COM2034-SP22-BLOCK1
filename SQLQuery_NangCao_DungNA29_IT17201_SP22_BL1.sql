@@ -594,6 +594,69 @@ GO
 EXECUTE SP_PRO1
 EXEC SP_PRO2
 
+
+-- Ví dụ Store Proc nâng cao có tham số
+-- Ví dụ 1: Tham số cơ bản truyền tham số
+GO
+ALTER PROC SP_CheckLuong_By_Ten
+    (@ten NVARCHAR(50),
+    @luong DECIMAL(20,0))
+AS
+SELECT *
+FROM nhanvien
+WHERE TenNV = @ten AND LuongNV >@luong 
+
+EXEC SP_CheckLuong_By_Ten @ten = 'Anh',@luong = 6000000
+
+-- Ví dụ nâng cao: 
+GO
+ALTER PROC SP_CRUD_DongSP
+    (@id Integer,
+    @maDSP NVARCHAR(100),
+    @tenDSP NVARCHAR(100),
+    @web NVARCHAR(100),
+    @SType VARCHAR(30))
+AS
+BEGIN
+    IF (@SType = 'SELECT')
+    BEGIN
+        SELECT *
+        FROM dongsanpham
+    END
+    IF (@SType = 'INSERT')
+    BEGIN
+
+        INSERT INTO dongsanpham
+            (MaDongSanPham,TenDongSanPham,WebsiteDongSanPham)
+        VALUES(@maDSP, @tenDSP, @web)        
+    END
+    IF (@SType = 'DELETE')
+    BEGIN
+       DELETE FROM dongsanpham WHERE IdDongSanPham = @id
+    END
+    ELSE IF (@SType = 'UPDATE')
+    BEGIN
+       UPDATE dongsanpham SET
+       MaDongSanPham = @maDSP,
+       TenDongSanPham = @tenDSP,
+       WebsiteDongSanPham = @web
+       WHERE IdDongSanPham = @id
+    END
+END
+
+
+
+EXEC SP_CRUD_DongSP @id = 0,@maDSP = 'chuongnv1',@tenDSP = N'Chương',
+@web = 'www.chuongnv.com',@SType = 'INSERT'
+EXEC SP_CRUD_DongSP @id = 0,@maDSP = '',@tenDSP = N'',
+@web = '',@SType = 'SELECT'
+EXEC SP_CRUD_DongSP @id = 21,@maDSP = '',@tenDSP = N'',
+@web = '',@SType = 'DELETE'
+
+DECLARE @myid uniqueidentifier = NEWID();  
+SELECT CONVERT(CHAR(255), @myid) AS 'char';  
+
+-- Các bạn viết 1 Store trên dành cho bảng cửa hàng. 17h40 Xong.
 /*
  3.5 Trigger trong SQL
 ❑Trigger là một dạng đặc biệt của thủ tục lưu trữ  (store procedure), được thực thi một cách tự động khi có sự thay đổi dữ liệu (do tác động của
@@ -660,9 +723,9 @@ BEGIN
     IF(SELECT LuongNV
     FROM inserted) < 50000
     BEGIN
-PRINT N'Tiền lương tối thiểu khi insert vào phải lớn hơn 50k'
-    -- Hủy bỏ việc thay đổi khi thực hiện insert
-    ROLLBACK TRANSACTION
+        PRINT N'Tiền lương tối thiểu khi insert vào phải lớn hơn 50k'
+        -- Hủy bỏ việc thay đổi khi thực hiện insert
+        ROLLBACK TRANSACTION
     END
 END
 
@@ -749,3 +812,17 @@ BEGIN
     END
 END
 DELETE FROM nhanvien WHERE MaNhanVien = 'NV999'
+
+
+
+-- Ví dụ xóa bảng hóa đơn
+GO
+CREATE TRIGGER TG_XoaIdHoaDon ON hoadon 
+INSTEAD OF DELETE
+AS
+BEGIN
+    DELETE FROM hoadonchitiet WHERE IdHoaDon IN (SELECT IdHoaDon FROM deleted)
+    DELETE FROM hoadon WHERE IdHoaDon IN (SELECT IdHoaDon FROM deleted)
+END
+
+DELETE FROM hoadon WHERE IdHoaDon = 11
