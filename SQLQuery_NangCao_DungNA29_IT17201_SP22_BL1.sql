@@ -628,15 +628,15 @@ BEGIN
 
         INSERT INTO dongsanpham
             (MaDongSanPham,TenDongSanPham,WebsiteDongSanPham)
-        VALUES(@maDSP, @tenDSP, @web)        
+        VALUES(@maDSP, @tenDSP, @web)
     END
     IF (@SType = 'DELETE')
     BEGIN
-       DELETE FROM dongsanpham WHERE IdDongSanPham = @id
+        DELETE FROM dongsanpham WHERE IdDongSanPham = @id
     END
     ELSE IF (@SType = 'UPDATE')
     BEGIN
-       UPDATE dongsanpham SET
+        UPDATE dongsanpham SET
        MaDongSanPham = @maDSP,
        TenDongSanPham = @tenDSP,
        WebsiteDongSanPham = @web
@@ -821,8 +821,71 @@ CREATE TRIGGER TG_XoaIdHoaDon ON hoadon
 INSTEAD OF DELETE
 AS
 BEGIN
-    DELETE FROM hoadonchitiet WHERE IdHoaDon IN (SELECT IdHoaDon FROM deleted)
-    DELETE FROM hoadon WHERE IdHoaDon IN (SELECT IdHoaDon FROM deleted)
+    DELETE FROM hoadonchitiet WHERE IdHoaDon IN (SELECT IdHoaDon
+    FROM deleted)
+    DELETE FROM hoadon WHERE IdHoaDon IN (SELECT IdHoaDon
+    FROM deleted)
 END
 
 DELETE FROM hoadon WHERE IdHoaDon = 11
+
+/*
+HÀM NGƯỜI DÙNG TỰ ĐỊNH NGHĨA
+❑Là một đối tượng CSDL chứa các câu lệnh SQL,
+được biên dịch sẵn và lưu trữ trong CSDL.
+❑Thực hiện một hành động như các tính toán
+phức tạp và trả về kết quả là một giá trị.
+❑Giá trị trả về có thể là:
+	❖Giá trị vô hướng
+	❖Một bảng
+
+SO SÁNH HÀM VỚI THỦ TỤC
+❑Tương tự như Stored Procedure
+❖Là một đối tượng CSDL chứa các câu lệnh SQL, được
+biên dịch sẵn và lưu trữ trong CSDL.
+❑Khác với Stored Procedure
+➢Các hàm luôn phải trả về một giá trị, sử dụng câu lệnh
+RETURN
+➢Hàm không có tham số đầu ra
+➢Không được chứa các câu lệnh INSERT, UPDATE, DELETE
+một bảng hoặc view đang tồn tại trong CSDL
+➢Có thể tạo bảng, bảng tạm, biến bảng và thực hiện các câu
+lệnh INSERT, UPDATE, DELETE trên các bảng, bảng tạm,
+biến bảng vừa tạo trong thân hà
+
+Hàm giá trị vô hướng: Trả về giá trị đơn của mọi kiểu dữ liệu
+Hàm giá trị bảng đơn giản: Trả về bảng, là kết quả của một câu SELECT đơn.
+Hàm giá trị bảng nhiều câu lệnh: Trả về bảng là kêt quả của nhiều câu lệnh
+*/
+-- Ví dụ 1: Viết 1 hàm tính tuổi người dùng khi họ nhập năm sinh
+GO
+CREATE FUNCTION F_TinhTuoi(@Ns int)
+RETURNS INT --Phải sử dụng Returns để định nghĩa kiểu dữ liệu trả về cho hàm
+AS 
+BEGIN
+    RETURN YEAR(GETDATE()) - @Ns
+END
+GO
+-- Cách gọi hà, Bắt buộc khi gọi hàm bổ sung chữ dbo. thì mới gọi được hàm
+PRINT dbo.F_TinhTuoi(2001)
+
+-- Thực hành, Tạo 1 hàm đếm số nhân viên đang có trong bảng nhân viên F_DemSoNV
+GO
+CREATE FUNCTION F_DemSoNV()
+RETURNS INT
+BEGIN
+    RETURN (SELECT COUNT(MaNhanVien)
+    FROM nhanvien)
+END
+GO
+PRINT dbo.F_DemSoNV()
+-- Tạo 1 hàm đếm được số lượng nhân viên theo giới tính
+GO
+CREATE FUNCTION F_DemSoNVByGT(@gt NVARCHAR(10))
+RETURNS INT
+BEGIN
+    RETURN (SELECT COUNT(MaNhanVien)
+    FROM nhanvien WHERE GioiTinh = @gt)
+END
+GO
+PRINT dbo.F_DemSoNVByGT('Nam')
