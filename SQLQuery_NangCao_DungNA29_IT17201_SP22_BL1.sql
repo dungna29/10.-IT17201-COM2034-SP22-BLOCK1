@@ -889,3 +889,90 @@ BEGIN
 END
 GO
 PRINT dbo.F_DemSoNVByGT('Nam')
+
+-- Ví dụ 2: Hàm trả về 1 bảng
+GO
+CREATE FUNCTION F_GetAllNhanVien()
+RETURNS TABLE
+AS RETURN SELECT * FROM nhanvien
+GO
+-- Muốn xem dữ liệu của hàm trả về dạng bảng thì cần Select
+SELECT * FROM dbo.F_GetAllNhanVien()
+
+-- Ví dụ 3: Hàm trả về đa câu lệnh
+GO
+CREATE FUNCTION F_GetSanPham_ByTrongLuong(@msp NVARCHAR(100),@tl float)
+RETURNS @TBL_SanPham TABLE(MaSP NVARCHAR(100),
+TenSP NVARCHAR(100),
+MoTa NVARCHAR(100),
+TrongLuong float)
+AS
+BEGIN
+    IF (@msp IS NULL)
+    BEGIN
+    INSERT INTO @TBL_SanPham(MaSp,TenSP,MoTa,TrongLuong)
+    SELECT MaSanPHam,TenSP,MoTaSP,TrongLuongSP FROM sanpham
+    END
+    ELSE
+    BEGIN
+    INSERT INTO @TBL_SanPham(MaSp,TenSP,MoTa,TrongLuong)
+    SELECT MaSanPHam,TenSP,MoTaSP,TrongLuongSP FROM sanpham WHERE TrongLuongSP = @tl
+    END
+    RETURN
+END
+GO
+SELECT *  FROM dbo.F_GetSanPham_ByTrongLuong('H00012',3.6)
+/* Xóa/Sửa Nội Dung của một hàm chỉ cần dùng DROP/ALTER*/
+
+/*
+VIEW là gì:
+❑Che dấu và bảo mật dữ liệu
+❖Không cho phép người dùng xem toàn bộ dữ liệu
+chứa trong các bảng.
+❖Bằng cách chỉ định các cột trong View, các dữ liệu
+quan trọng chứa trong một số cột của bảng có thể
+được che dấu
+❑Hiển thị dữ liệu một cách tùy biến
+❖Với mỗi người dùng khác nhau, có thể tạo các View
+khác nhau phù hợp với nhu cầu xem thông tin của
+từng người dùng
+❑Lưu trữ câu lệnh truy vấn phức tạp và thường
+xuyên sử dụng.
+❑Thực thi nhanh hơn các câu lệnh truy vấn do đã
+được biên dịch sẵn
+❑Đảm bảo tính toàn vẹn dữ liệu
+❖Khi sử dụng View để cập nhật dữ liệu trong các bảng
+cơ sở, SQL Server sẽ tự động kiểm tra các ràng buộc
+toàn vẹn trên các bản
+❑Tên view không được trùng với tên bảng hoặc
+view đã tồn tại
+❑Câu lệnh SELECT tạo VIEW
+❖Không được chứa mệnh đề INTO, hoặc ORDER BY trừ
+khi chứa từ khóa TOP
+❑Đặt tên cột
+❖Cột chứa giá trị được tính toán từ nhiều cột khác phải
+được đặt tên
+❖Nếu cột không được đặt tên, tên cột sẽ được mặc
+định giống tên cột của bảng cơ sở
+*/
+GO
+ALTER VIEW View_GetAllSP
+AS
+SELECT * FROM sanpham WHERE TrongLuongSP > 3.6
+GO
+SELECT * FROM View_GetAllSP
+
+-- Luyện tập tạo view
+/*
+View 1: Tạo ra 1 View báo cáo doanh số sản phẩm bao gồm các cột thông tin sau để báo cáo cho giám đốc của đại lý sấp xếp giảm dần theo Số lượng đã bán:
+[Mã Sản Phẩm] [Tên Sản Phẩm] [Mã Dòng Sản phẩm] [Tên Dòng Sản phẩm] [Số Lượng Tồn Kho] [Số Lượng Đã Bán] [Số tiền lãi] 
+
+View 2:  Tạo ra 1 View báo cáo cho thanh tra của tập đoàn xuống kiểm tra gồm những cột sau và sắp xếp theo tổng số lượng sản phẩm đã bán của nhân viên đó
+[Tên Cửa Hàng][Thành Phố][Địa Chỉ 1][Quốc Gia][Mã Nhân Viên] [Tên Nhân Viên] [Số điện thoại] [Lương] [Mã Người Báo Cáo] [Tên người Báo Cáo][Chức danh người báo cáo][Tổng số lượng sản phẩm đã bán của nhân viên đó]
+
+View 3: Sắp tới 30/4 mùng 1/5 đang có chương trình tặng quà cho những khách hàng từng mua hàng tổng đơn hàng từ 15 triệu trở lên. Hãy tạo 1 View hiển thị những khách hàng nằm trong diện được thưởng bao gồm các cột và sắp xếp theo tổng số tiền đã mua
+[Id Khách Hàng] [Họ và Tên Khách Hàng] [Số điện thoại] [Địa Chỉ 1] [Thành phố] [Tổng số lượng hà đã mua] [Tổng số tiền đã mua]
+
+View 4: Hiển thị ra 1 View báo cáo Các hóa đơn có tình trạng chưa ship hàng cho khách được và để các trưởng phòng họp bắt các nhân viên giải trình hiển thị ra các cột như sau và sắp xếp giảm dần theo số lượng:
+[ID Hóa Đơn] [Mã Nhân Viên] [Tên Nhân Viên] [Ngày Lập Hóa Đơn] [Ngày Giao Hàng] [Tên Khách Hàng] [Số ĐT Khách Hàng] [Quận] [Trạng Thái Hóa ĐƠn] [Số Lượng trên đơn]
+*/
