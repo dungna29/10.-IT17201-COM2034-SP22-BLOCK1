@@ -985,3 +985,23 @@ View 4: Hiển thị ra 1 View báo cáo Các hóa đơn có tình trạng chưa
 [ID Hóa Đơn] [Mã Nhân Viên] [Tên Nhân Viên] [Ngày Lập Hóa Đơn] [Ngày Giao Hàng] [Tên Khách Hàng] 
 [Số ĐT Khách Hàng] [Quận] [Trạng Thái Hóa ĐƠn] [Số Lượng trên đơn]
 */
+Go
+ALTER VIEW VIEW1 AS
+SELECT dbo.sanpham.MaSanPHam AS 'Mã Sản Phẩm',
+dbo.sanpham.TenSP AS 'Tên Sản Phẩm',
+dbo.dongsanpham.MaDongSanPham AS 'Mã Dòng Sản phẩm',
+dbo.sanpham.SoLuongSanPhamTon AS 'Số Lượng Tồn Kho',
+SUM(dbo.hoadonchitiet.SoLuongDatHang) AS 'Số lượng đặt hàng',
+(SUM(dbo.hoadonchitiet.SoLuongDatHang) * SUM(dbo.sanpham.GiaBanSP - dbo.sanpham.GiaNhapSP)) AS 'Số tiền lãi'
+FROM hoadonchitiet
+JOIN sanpham ON hoadonchitiet.IdSanPham = sanpham.IdSanPham
+JOIN dongsanpham ON dongsanpham.IdDongSanPham = sanpham.IdDongSanPham
+GROUP BY 
+hoadonchitiet.IdSanPham,
+dbo.sanpham.MaSanPHam,
+dbo.sanpham.TenSP,
+dbo.dongsanpham.MaDongSanPham,
+dbo.sanpham.SoLuongSanPhamTon
+GO
+SELECT * FROM VIEW1
+ORDER BY [Số lượng đặt hàng] DESC
